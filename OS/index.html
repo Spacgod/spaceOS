@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>spaceOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+       cbody {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'spaceOS', sans-serif;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+        .desktop {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: calc(100vh - 40px);
+            width: 100vw;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .panel {
+            height: 40px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .dock {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .dock-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dock-icon:hover {
+            transform: scale(1.2);
+        }
+        .desktop-icon {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: absolute;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .desktop-icon i {
+            font-size: 32px;
+            margin-bottom: 5px;
+            transition: all 0.2s;
+        }
+        .desktop-icon span {
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .window {
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            width: 800px;
+            height: 600px;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+        .window.active {
+            display: flex;
+            z-index: 100;
+        }
+        .window-header {
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .window-control {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .close { background: #ff5f56; }
+        .minimize { background: #ffbd2e; }
+        .maximize { background: #27c93f; }
+        .window-content {
+            flex: 1;
+            padding: 15px;
+            overflow: auto;
+            transition: all 0.3s ease;
+        }
+        .terminal {
+            font-family: monospace;
+            height: 100%;
+            padding: 10px;
+            white-space: pre-wrap;
+            transition: all 0.3s ease;
+        }
+        .terminal-line {
+            margin-bottom: 5px;
+        }
+        .terminal-prompt {
+            color: #dd4814;
+        }
+        .terminal-command {
+        }
+        .terminal-output {
+        }
+        .browser-url-bar {
+            display: flex;
+            padding: 8px;
+            border-bottom: 1px solid;
+            transition: all 0.3s ease;
+        }
+        .browser-content {
+            flex: 1;
+            height: 100%;
+            border: none;
+        }
+        .editor-content {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            font-family: monospace;
+            padding: 10px;
+            transition: all 0.3s ease;
+        }
+        .calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 10px;
+        }
+        .calculator-display {
+            grid-column: span 4;
+            padding: 10px;
+            text-align: right;
+            font-size: 24px;
+            border: 1px solid;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        .calculator-btn {
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid;
+            cursor: pointer;
+            text-align: center;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .calculator-btn.operator {
+        }
+        .calculator-btn.equals {
+        }
+        .file-list {
+            display: flex;
+            flex-direction: column;
+        }
+        .file-item {
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .file-item:hover {
+        }
+        .file-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        .file-icon.folder {
+            color: #ffbd2e;
+        }
+        .file-icon.file {
+        }
+        .context-menu {
+            position: absolute;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        .context-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .context-menu-item:hover {
+        }
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid;
+            transition: all 0.3s ease;
+        }
+        .settings-category {
+            margin-bottom: 20px;
+        }
+        .settings-category-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .wallpaper-preview {
+            width: 100px;
+            height: 60px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .wallpaper-preview:hover {
+            transform: scale(1.05);
+        }
+            
+        .wallpaper-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .github-repo {
+            border: 1px solid;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+        .github-repo-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .github-repo-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .github-repo-description {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .github-repo-stats {
+            display: flex;
+            font-size: 12px;
+        }
+        .github-repo-stat {
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .github-repo-stat i {
+            margin-right: 4px;
+        }
+        .github-search {
+            margin-bottom: 16px;
+        }
+        .github-search input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid;
+        }
+        .github-profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid;
+        }
+        .github-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            margin-right: 16px;
+        }
+        .github-user-info {
+            flex: 1;
+        }
+        .github-username {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .github-bio {
+            font-size: 14px;
+            color: inherit;
+            opacity: 0.8;
+        }
+        .github-location,
+        .github-blog {
+        font-size: 14px;
+        color: inherit;
+        opacity: 0.8;
+        margin-top: 4px;
+        }
+
+        body.night .slider {
+        background: #555;
+        }
+        body.night input:checked + .slider {
+        background: #0e0501;
+        }
+
+        body.day .slider {
+        background: #ccc;
+        }
+        body.day input:checked + .slider {
+        background: #780505; 
+        }
+
+        body.night {
+            background: #070707;
+            color: #f5efef;
+        }
+        body.night .panel {
+            background: rgba(30, 30, 30, 0.9);
+            color: #fffcfc;
+        }
+        body.night .dock {
+            background: rgba(40, 40, 40, 0.7);
+            color: #f5efef;
+        }
+        body.night .dock-icon {
+            background: rgba(60, 60, 60, 0.8);
+            color: hsl(0, 0%, 91%);
+        }
+        body.night .dock-icon:hover {
+            background: rgba(80, 80, 80, 0.9);
+        }
+        body.night .desktop-icon {
+            color: #f5efef;
+            text-shadow: 1px 1px 2px #070707;
+        }
+        body.night .desktop-icon span {
+            color: #f5efef;
+        }
+        body.night .window {
+            background: rgba(50, 50, 50, 0.95);
+            color: #f5efef;
+        }
+        body.night .window-header {
+            background: #334;
+            color: #f5efef;
+        }
+        body.night .terminal {
+            background: #070707;
+            color: #f5efef;
+        }
+        body.night .terminal-output {
+            color: #f5efef;
+        }
+        body.night .browser-url-bar {
+            background: #334;
+            border-color: #445;
+            color: #f5efef;
+        }
+        body.night .browser-url-bar input {
+            background: #070707;
+            color: #f5efef;
+            border-color: #445;
+        }
+        body.night .editor-content {
+            background: #070707;
+            color: #f5efef;
+        }
+        body.night .calculator-display {
+            background: #070707;
+            border-color: #445;
+            color: #f5efef;
+        }
+        body.night .calculator-btn {
+            background: #334;
+            border-color: #445;
+            color: #f5efef;
+        }
+        body.night .calculator-btn.operator {
+            background: #445;
+            color: #f5efef;
+        }
+        body.night .calculator-btn.equals {
+            background: #dd4814;
+            color: #f5efef;
+        }
+        body.night .file-item:hover {
+            background: #334;
+        }
+        body.night .context-menu {
+            background: #334;
+            color: #f5efef;
+        }
+        body.night .context-menu-item:hover {
+            background: #445;
+        }
+        body.night .settings-option {
+            border-color: #445;
+        }
+        body.night .settings-category-title {
+            color: #f5efef;
+        }
+        body.night .wallpaper-preview {
+            border-color: #555;
+        }
+        body.night .github-repo {
+            border-color: #445;
+            background: #334;
+        }
+        body.night .github-repo-name {
+            color: #58a6ff;
+        }
+        body.night .github-repo-description,
+        body.night .github-repo-stats {
+            color: #8b949e;
+        }
+        body.night .github-search input {
+            background: #070707;
+            color: #f5efef;
+            border-color: #445;
+        }
+        body.night .github-profile {
+            border-color: #445;
+        }
+        body.night .github-bio {
+            color: #8b949e;
+        }
+        body.night .github-location,
+        body.night .github-blog {
+            color: #8b949e;
+        }
+        
+        body.day .github-location,
+        body.day .github-blog {
+        color: #57606a;
+        }
+        body.day {
+            background: #f0f0f0;
+            color: #334;
+        }
+        body.day .panel {
+            background: rgba(240, 240, 240, 0.9);
+            color: #334;
+        }
+        body.day .dock {
+            background: rgba(255, 255, 255, 0.7);
+            color: #334;
+        }
+        body.day .dock-icon {
+            background: rgba(255, 255, 255, 0.8);
+            color: #334;
+        }
+        body.day .dock-icon:hover {
+            background: rgba(255, 255, 255, 0.95);
+        }
+        body.day .desktop-icon {
+            color: #334;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        body.day .desktop-icon span {
+            color: #334;
+        }
+        body.day .window {
+            background: rgba(255, 255, 255, 0.95);
+            color: #334;
+        }
+        body.day .window-header {
+            background: #780505;
+            color: white;
+        }
+        body.day .terminal {
+            background: #000000;
+            color: #f2f2f2;
+        }
+        body.day .terminal-prompt {
+            color: #dd4814;
+        }
+        body.day .terminal-command {
+            color: #f2f2f2;
+        }
+        body.day .terminal-output {
+            color: #aaaaaa;
+        }
+        body.day .browser-url-bar {
+            background: #f1f1f1;
+            border-color: #ddd;
+            color: #334;
+        }
+        body.day .browser-url-bar input {
+            background: #fff;
+            color: #334;
+            border-color: #ddd;
+        }
+        body.day .editor-content {
+            background: #f9f9f9;
+            color: #334;
+        }
+        body.day .calculator-display {
+            background: #f1f1f1;
+            border-color: #ddd;
+            color: #334;
+        }
+        body.day .calculator-btn {
+            background: #f9f9f9;
+            border-color: #ddd;
+            color: #334;
+        }
+        body.day .calculator-btn.operator {
+            background: #5e2750;
+            color: white;
+        }
+        body.day .calculator-btn.equals {
+            background: #dd4814;
+            color: white;
+        }
+        body.day .file-item:hover {
+            background: #f1f1f1;
+        }
+        body.day .context-menu {
+            background: white;
+            color: #334;
+        }
+        body.day .context-menu-item:hover {
+            background: #f1f1f1;
+        }
+        body.day .settings-option {
+            border-color: #ddd;
+        }
+        body.day .settings-category-title {
+            color: #334;
+        }
+        body.day .wallpaper-preview {
+            border-color: #ddd;
+        }
+        body.day .github-repo {
+            border-color: #ddd;
+            background: white;
+        }
+        body.day .github-repo-name {
+            color: #0969da;
+        }
+        body.day .github-repo-description,
+        body.day .github-repo-stats {
+            color: #57606a;
+        }
+        body.day .github-search input {
+            background: #fff;
+            color: #334;
+            border-color: #ddd;
+        }
+        body.day .github-profile {
+            border-color: #ddd;
+        }
+        body.day .github-bio {
+            color: #57606a;
+        }
+    </style>
+</head>
+<body class="day">
+    <div class="panel">
+        <div class="flex items-center SX4">
+            <div class="font-bold cursor-pointer" onclick="openWindow('activities')">spaceOS</div>
+            <div class="flex SX2" id="window-list">
+            </div>
+        </div>
+        <div class="ml-auto flex items-center SX4">
+            <div id="clock">12:34 PM</div>
+            <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white cursor-pointer" onclick="openWindow('settings')">U</div>
+        </div>
+    </div>
+    
+    <div class="desktop" id="desktop" style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')">
+        <div class="desktop-icon" style="top: 20px; left: 20px;" onclick="openWindow('home')">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </div>
+        <div class="desktop-icon" style="top: 20px; left: 120px;" onclick="openWindow('files')">
+            <i class="fas fa-folder"></i>
+            <span>Files</span>
+        </div>
+        <div class="desktop-icon" style="top: 120px; left: 20px;" onclick="openWindow('terminal')">
+            <i class="fas fa-terminal"></i>
+            <span>Terminal</span>
+        </div>
+        <div class="desktop-icon" style="top: 120px; left: 120px;" onclick="openWindow('text-editor')">
+            <i class="fas fa-file-alt"></i>
+            <span>Text Editor</span>
+        </div>
+        <div class="desktop-icon" style="top: 220px; left: 20px;" onclick="openWindow('settings')">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </div>
+        <div class="desktop-icon" style="top: 220px; left: 120px;" onclick="openWindow('github')">
+            <i class="fab fa-github"></i>
+            <span>GitHub</span>
+        </div>
+        
+        <div class="dock">
+            <div class="dock-icon" onclick="openWindow('activities')">
+                <i class="fas fa-th-large"></i>
+            </div>
+            <div class="dock-icon" onclick="openWindow('browser')">
+                <i class="fab fa-firefox"></i>
+            </div>
+            <div class="dock-icon" onclick="openWindow('files')">
+                <i class="fas fa-folder"></i>
+            </div>
+            <div class="dock-icon" onclick="openWindow('terminal')">
+                <i class="fas fa-terminal"></i>
+            </div>
+            <div class="dock-icon" onclick="openWindow('calculator')">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="dock-icon" onclick="openWindow('github')">
+                <i class="fab fa-github"></i>
+            </div>
+            <div class="dock-icon" onclick="openWindow('settings')">
+                <i class="fas fa-cog"></i>
+            </div>
+        </div>
+        
+        <div class="context-menu" id="context-menu">
+            <div class="context-menu-item" onclick="createNewFile()"><i class="fas fa-file mr-2"></i>New File</div>
+            <div class="context-menu-item" onclick="createNewFolder()"><i class="fas fa-folder mr-2"></i>New Folder</div>
+            <div class="context-menu-item"><i class="fas fa-paste mr-2"></i>Paste</div>
+            <div class="context-menu-item" onclick="openWindow('settings')"><i class="fas fa-cog mr-2"></i>Settings</div>
+        </div>
+        
+        <div class="window" id="TW">
+            <div class="window-header">
+                <div>Terminal</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('terminal')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('terminal')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('terminal')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="terminal" id="terminal-content">
+                    <div class="terminal-line"><span class="terminal-prompt">user@spaceOS-sim:~$</span> <span class="terminal-command">ls</span></div>
+                    <div class="terminal-line terminal-output">Desktop  Documents  Downloads  Music  Pictures  Videos</div>
+                    <div class="terminal-line"><span class="terminal-prompt">user@spaceOS-sim:~$</span> <span class="terminal-command">echo "spaceOS Simulator"</span></div>
+                    <div class="terminal-line terminal-output">spaceOS</div>
+                    <div class="terminal-line"><span class="terminal-prompt">user@spaceOS-sim:~$</span> <span id="terminal-input" contenteditable="true"></span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="window" id="FW">
+            <div class="window-header">
+                <div>Files</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('files')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('files')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('files')"></div>
+                </div>
+            </div>
+            <div class="window-content p-0">
+                <div class="flex h-full">
+                    <div class="w-1/4 bg-gray-100 p-4">
+                        <div class="font-bold mb-2">Places</div>
+                        <div class="space-y-1">
+                            <div class="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer" onclick="navigateTo('home')">
+                                <i class="fas fa-home mr-2"></i> Home
+                            </div>
+                            <div class="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer" onclick="navigateTo('downloads')">
+                                <i class="fas fa-download mr-2"></i> Downloads
+                            </div>
+                            <div class="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer" onclick="navigateTo('pictures')">
+                                <i class="fas fa-image mr-2"></i> Pictures
+                            </div>
+                            <div class="flex items-center p-2 hover:bg-gray-200 rounded cursor-pointer" onclick="navigateTo('documents')">
+                                <i class="fas fa-file mr-2"></i> Documents
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-3/4 p-4 overflow-auto">
+                        <div class="file-list" id="file-list">
+                            <div class="file-item" onclick="openFile('Documents')">
+                                <i class="file-icon folder fas fa-folder"></i>
+                                <span>Documents</span>
+                            </div>
+                            <div class="file-item" onclick="openFile('Downloads')">
+                                <i class="file-icon folder fas fa-folder"></i>
+                                <span>Downloads</span>
+                            </div>
+                            <div class="file-item" onclick="openFile('Pictures')">
+                                <i class="file-icon folder fas fa-folder"></i>
+                                <span>Pictures</span>
+                            </div>
+                            <div class="file-item" onclick="openFile('notes.txt')">
+                                <i class="file-icon file fas fa-file-alt"></i>
+                                <span>notes.txt</span>
+                            </div>
+                            <div class="file-item" onclick="openFile('resume.pdf')">
+                                <i class="file-icon file fas fa-file-pdf"></i>
+                                <span>resume.pdf</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="window" id="browser-window">
+            <div class="window-header">
+                <div>spaceOS Browser</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('browser')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('browser')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('browser')"></div>
+                </div>
+            </div>
+            <div class="browser-url-bar">
+                <div class="flex-1 flex">
+                    <input type="text" id="browser-url" class="flex-1 p-2 border rounded-l" value="www.youtube.com/" placeholder="Enter URL">
+                    <button class="bg-blue-500 text-white px-4 rounded-r" onclick="loadUrl()">Go</button>
+                </div>
+            </div>
+            <iframe src="www.youtube.com/" class="browser-content" id="browser-content"></iframe>
+        </div>
+        
+        <div class="window" id="text-editor-window">
+            <div class="window-header">
+                <div>Text Editor</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('text-editor')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('text-editor')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('text-editor')"></div>
+                </div>
+            </div>
+            <div class="window-content p-0">
+                <textarea class="editor-content" id="editor-content" placeholder="Start typing here...">spaceOS
+
+This is a simple text editor where you can write notes, code, or anything you like. just write something.
+
+Try saving this file and opening it later!</textarea>
+            </div>
+        </div>
+        
+        <div class="window" id="calculator-window">
+            <div class="window-header">
+                <div>Calculator</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('calculator')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('calculator')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('calculator')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="calculator">
+                    <div class="calculator-display" id="calc-display">0</div>
+                    <div class="calculator-btn" onclick="clearCalculator()">C</div>
+                    <div class="calculator-btn" onclick="backspaceCalculator()">⌫</div>
+                    <div class="calculator-btn" onclick="appendToCalc('%')">%</div>
+                    <div class="calculator-btn operator" onclick="appendToCalc('/')">/</div>
+                    <div class="calculator-btn" onclick="appendToCalc('7')">7</div>
+                    <div class="calculator-btn" onclick="appendToCalc('8')">8</div>
+                    <div class="calculator-btn" onclick="appendToCalc('9')">9</div>
+                    <div class="calculator-btn operator" onclick="appendToCalc('*')">×</div>
+                    <div class="calculator-btn" onclick="appendToCalc('4')">4</div>
+                    <div class="calculator-btn" onclick="appendToCalc('5')">5</div>
+                    <div class="calculator-btn" onclick="appendToCalc('6')">6</div>
+                    <div class="calculator-btn operator" onclick="appendToCalc('-')">-</div>
+                    <div class="calculator-btn" onclick="appendToCalc('1')">1</div>
+                    <div class="calculator-btn" onclick="appendToCalc('2')">2</div>
+                    <div class="calculator-btn" onclick="appendToCalc('3')">3</div>
+                    <div class="calculator-btn operator" onclick="appendToCalc('+')">+</div>
+                    <div class="calculator-btn" onclick="appendToCalc('0')">0</div>
+                    <div class="calculator-btn" onclick="appendToCalc('.')">.</div>
+                    <div class="calculator-btn equals" onclick="calculateResult()">=</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="window" id="activities-window">
+            <div class="window-header">
+                <div>Activities Overview</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('activities')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('activities')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('activities')"></div>
+                </div>
+            </div>
+            <div class="window-content p-4">
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer" onclick="openWindow('browser')">
+                        <i class="fab fa-spaceOS text-4xl mb-2"></i>
+                        <span>Web Browser</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer" onclick="openWindow('files')">
+                        <i class="fas fa-folder text-4xl mb-2"></i>
+                        <span>Files</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer" onclick="openWindow('terminal')">
+                        <i class="fas fa-terminal text-4xl mb-2"></i>
+                        <span>Terminal</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer" onclick="openWindow('calculator')">
+                        <i class="fas fa-calculator text-4xl mb-2"></i>
+                        <span>Calculator</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer" onclick="openWindow('text-editor')">
+                        <i class="fas fa-file-alt text-4xl mb-2"></i>
+                        <span>Text Editor</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer" onclick="openWindow('github')">
+                        <i class="fab fa-github text-4xl mb-2"></i>
+                        <span>GitHub</span>
+                    </div>
+                    <div class="flex flex-col items-center p-4 bg-gray-100 rounded-lg cursor-pointer" onclick="openWindow('settings')">
+                        <i class="fas fa-cog text-4xl mb-2"></i>
+                        <span>Settings</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="window" id="github-window">
+            <div class="window-header">
+                <div>GitHub - Spacgod</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('github')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('github')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('github')"></div>
+                </div>
+            </div>
+            <div class="window-content p-4">
+                <div class="github-profile">
+                    <img id="github-avatar" src="" alt="Profile" class="github-avatar">
+                    <div class="github-user-info">
+                        <div id="github-username" class="github-username"></div>
+                        <div id="github-bio" class="github-bio"></div>
+                        <div id="github-location" class="github-bio"></div>
+                        <div id="github-blog" class="github-bio"></div>
+                    </div>
+                </div>
+                <div class="github-search">
+                    <input type="text" id="github-search-input" placeholder="Search repositories..." onkeyup="searchRepositories()">
+                </div>
+                <div id="github-repos">
+                </div>
+            </div>
+        </div>
+        <div class="window" id="settings-window">
+            <div class="window-header">
+                <div>Settings</div>
+                <div class="window-controls">
+                    <div class="window-control close" onclick="closeWindow('settings')"></div>
+                    <div class="window-control minimize" onclick="minimizeWindow('settings')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('settings')"></div>
+                </div>
+            </div>
+            <div class="window-content p-4 overflow-y-auto">
+                <div class="settings-category">
+                    <div class="settings-category-title">Appearance</div>
+                    <div class="settings-option">
+                        <span>Theme</span>
+                        <div class="flex SX4">
+                            <button class="px-3 py-1 rounded border" onclick="setTheme('day')">day</button>
+                            <button class="px-3 py-1 rounded border" onclick="setTheme('night')">night</button>
+                        </div>
+                    </div>
+                    <div class="wallpaper-grid">
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1440404653325-ab127d49abc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1532274402911-5a369e4c4bb5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                        <div class="wallpaper-preview" style="background-image: url('https://images.unsplash.com/photo-1511300636408-a54c99f54307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')" onclick="setWallpaper(this, 'https://images.unsplash.com/photo-1511300636408-a54c99f54307?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png')"></div>
+                    </div>
+                    </div>
+                    <div class="settings-option">
+                        <span>Panel Transparency</span>
+                        <div class="flex items-center gap-2">
+                            <input type="range" min="0" max="100" value="90" class="w-32" id="panel-transparency" oninput="updatePanelTransparency(this.value)">
+                            <span id="panel-transparency-value">90%</span>
+                        </div>
+                    </div>
+                    <div class="settings-option">
+                        <span>Dock Size</span>
+                        <div class="flex items-center gap-2">
+                            <input type="range" min="40" max="80" value="48" class="w-32" id="dock-size" oninput="updateDockSize(this.value)">
+                            <span id="dock-size-value">48px</span>
+                        </div>
+                    </div>
+                </div>
+            
+                
+                <div class="settings-category">
+                    <div class="settings-category-title">Dock</div>
+                    <div class="settings-option">
+                        <span>Auto hide Dock</span>
+                        <label class="switch">
+                            <input type="checkbox" id="dock-autohide" onchange="toggleDockAutohide(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-option">
+                        <span>Dock Position</span>
+                        <select class="border rounded p-1" id="dock-position" onchange="updateDockPosition(this.value)">
+                            <option value="bottom">Bottom</option>
+                            <option value="left">Left</option>
+                            <option value="right">Right</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-category">
+                    <div class="settings-category-title">About</div>
+                    <div class="settings-option">
+                        <span>spaceOS</span>
+                        <span>Version 1.0</span>
+                    </div>
+                    <div class="settings-option">
+                        <span>Created with</span>
+                        <span>HTML, CSS & JavaScript</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activeWindows = [];
+        let currentPath = 'home';
+        let calculatorValue = '0';
+        let calculatorExpression = '';
+        let currentTheme = 'night';
+        let currentWallpaper = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80&fm=png';
+        let panelTransparency = 90;
+        let dockSize = 48;
+        let systemSoundsEnabled = true;
+        let dockAutohide = false;
+        let dockPosition = 'bottom';
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            document.getElementById('terminal-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const command = this.textContent.trim();
+                    this.textContent = '';
+                    executeCommand(command);
+                }
+            });
+            
+            document.getElementById('desktop').addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                const contextMenu = document.getElementById('context-menu');
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = `${e.clientX}px`;
+                contextMenu.style.top = `${e.clientY}px`;
+            });
+            
+            document.addEventListener('click', function() {
+                document.getElementById('context-menu').style.display = 'none';
+            });
+            initializeSettings();
+            
+            loadGitHubRepos();
+        });
+        
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('clock').textContent = timeString;
+        }
+        
+        function openWindow(windowId) {
+            const window = document.getElementById(`${windowId}-window`);
+            if (!window) {
+                console.error(`Window with ID ${windowId}-window not found`);
+                return;
+            }
+            window.classList.add('active');
+            
+            bringToFront(windowId);
+            
+            if (!activeWindows.includes(windowId)) {
+                activeWindows.push(windowId);
+                updateWindowList();
+            }
+        }
+        
+        function closeWindow(windowId) {
+            const window = document.getElementById(`${windowId}-window`);
+            if (!window) return;
+            
+            window.classList.remove('active');
+            
+            const index = activeWindows.indexOf(windowId);
+            if (index > -1) {
+                activeWindows.splice(index, 1);
+                updateWindowList();
+            }
+        }
+        
+        function minimizeWindow(windowId) {
+            const window = document.getElementById(`${windowId}-window`);
+            if (window) {
+                window.classList.remove('active');
+            }
+        }
+        
+        function maximizeWindow(windowId) {
+            const window = document.getElementById(`${windowId}-window`);
+            if (window) {
+                window.classList.toggle('w-full');
+                window.classList.toggle('h-full');
+                window.classList.toggle('top-0');
+                window.classList.toggle('left-0');
+            }
+        }
+        
+        function bringToFront(windowId) {
+            const windows = document.querySelectorAll('.window');
+            windows.forEach(w => {
+                if (w.id === `${windowId}-window`) {
+                    w.style.zIndex = '100';
+                } else {
+                    w.style.zIndex = '10';
+                }
+            });
+        }
+        
+        function updateWindowList() {
+            const windowList = document.getElementById('window-list');
+            windowList.innerHTML = '';
+            
+            activeWindows.forEach(windowId => {
+                const window = document.getElementById(`${windowId}-window`);
+                if (window) {
+                    const windowName = window.querySelector('.window-header div:first-child').textContent;
+                    const windowItem = document.createElement('div');
+                    windowItem.textContent = windowName;
+                    windowItem.className = 'cursor-pointer hover:underline';
+                    windowItem.onclick = () => {
+                        openWindow(windowId);
+                        bringToFront(windowId);
+                    };
+                    windowList.appendChild(windowItem);
+                }
+            });
+        }
+        
+        function executeCommand(command) {
+            const terminal = document.getElementById('terminal-content');
+            const prompt = `<span class="terminal-prompt">user@spaceOS-sim:~$</span> <span class="terminal-command">${command}</span>`;
+            
+            let output = '';
+            
+            switch(command.toLowerCase()) {
+                case 'ls':
+                    output = 'Desktop  Documents  Downloads  Music  Pictures  Videos';
+                    break;
+                case 'help':
+                    output = 'Available commands: ls, echo, clear, date, help';
+                    break;
+                case 'clear':
+                    terminal.innerHTML = '<div class="terminal-line"><span class="terminal-prompt">user@spaceOS-sim:~$</span> <span id="terminal-input" contenteditable="true"></span></div>';
+                    document.getElementById('terminal-input').focus();
+                    return;
+                case 'date':
+                    output = new Date().toString();
+                    break;
+                case '':
+                    break;
+                default:
+                    if (command.startsWith('echo ')) {
+                        output = command.substring(5);
+                    } else {
+                        output = `Command not found: ${command}`;
+                    }
+            }
+            
+            terminal.innerHTML += `
+                <div class="terminal-line">${prompt}</div>
+                ${output ? `<div class="terminal-line terminal-output">${output}</div>` : ''}
+                <div class="terminal-line"><span class="terminal-prompt">user@spaceOS-sim:~$</span> <span id="terminal-input" contenteditable="true"></span></div>
+            `;
+            
+            terminal.scrollTop = terminal.scrollHeight;
+            document.getElementById('terminal-input').focus();
+        }
+        
+        function loadUrl() {
+            const urlInput = document.getElementById('browser-url');
+            let url = urlInput.value;
+            
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+                urlInput.value = url;
+            }
+            
+            document.getElementById('browser-content').src = url;
+        }
+        
+        function navigateTo(path) {
+            currentPath = path;
+            const fileList = document.getElementById('file-list');
+            
+            switch(path) {
+                case 'home':
+                    fileList.innerHTML = `
+                        <div class="file-item" onclick="openFile('Documents')">
+                            <i class="file-icon folder fas fa-folder"></i>
+                            <span>Documents</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('Downloads')">
+                            <i class="file-icon folder fas fa-folder"></i>
+                            <span>Downloads</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('Pictures')">
+                            <i class="file-icon folder fas fa-folder"></i>
+                            <span>Pictures</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('notes.txt')">
+                            <i class="file-icon file fas fa-file-alt"></i>
+                            <span>notes.txt</span>
+                        </div>
+                    `;
+                    break;
+                case 'downloads':
+                    fileList.innerHTML = `
+                        <div class="file-item" onclick="openFile('spaceOS.iso')">
+                            <i class="file-icon file fas fa-file-archive"></i>
+                            <span>spaceOS.iso</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('document.pdf')">
+                            <i class="file-icon file fas fa-file-pdf"></i>
+                            <span>document.pdf</span>
+                        </div>
+                    `;
+                    break;
+                case 'documents':
+                    fileList.innerHTML = `
+                        <div class="file-item" onclick="openFile('Work')">
+                            <i class="file-icon folder fas fa-folder"></i>
+                            <span>Work</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('Personal')">
+                            <i class="file-icon folder fas fa-folder"></i>
+                            <span>Personal</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('resume.docx')">
+                            <i class="file-icon file fas fa-file-word"></i>
+                            <span>resume.docx</span>
+                        </div>
+                    `;
+                    break;
+                case 'pictures':
+                    fileList.innerHTML = `
+                        <div class="file-item" onclick="openFile('Vacation')">
+                            <i class="file-icon folder fas fa-folder"></i>
+                            <span>Vacation</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('Family')">
+                            <i class="file-icon folder fas fa-folder"></i>
+                            <span>Family</span>
+                        </div>
+                        <div class="file-item" onclick="openFile('profile.jpg')">
+                            <i class="file-icon file fas fa-image"></i>
+                            <span>profile.jpg</span>
+                        </div>
+                    `;
+                    break;
+            }
+        }
+        
+        function openFile(filename) {
+            if (filename.endsWith('.txt') || filename.endsWith('.docx')) {
+                openWindow('text-editor');
+                document.getElementById('editor-content').value = `This is the content of ${filename}\n\nYou can edit this file and save your changes.`;
+            } else if (filename.endsWith('.pdf')) {
+                alert(`Opening PDF file: ${filename}`);
+            } else if (filename.endsWith('.jpg') || filename.endsWith('.png')) {
+                alert(`Opening image file: ${filename}`);
+            } else {
+                navigateTo(filename.toLowerCase());
+            }
+        }
+        
+        function createNewFile() {
+            const fileName = prompt('Enter file name:');
+            if (fileName) {
+                const fileList = document.getElementById('file-list');
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.onclick = () => openFile(fileName);
+                
+                const icon = document.createElement('i');
+                icon.className = 'file-icon file fas fa-file-alt';
+                icon.style.marginRight = '8px';
+                
+                const span = document.createElement('span');
+                span.textContent = fileName;
+                
+                fileItem.appendChild(icon);
+                fileItem.appendChild(span);
+                fileList.appendChild(fileItem);
+        }
+    }
+    
+    function createNewFolder() {
+        const folderName = prompt('Enter folder name:');
+        if (folderName) {
+            const fileList = document.getElementById('file-list');
+            const folderItem = document.createElement('div');
+            folderItem.className = 'file-item';
+            folderItem.onclick = () => navigateTo(folderName.toLowerCase());
+            
+            const icon = document.createElement('i');
+            icon.className = 'file-icon folder fas fa-folder';
+            icon.style.marginRight = '8px';
+            
+            const span = document.createElement('span');
+            span.textContent = folderName;
+            
+            folderItem.appendChild(icon);
+            folderItem.appendChild(span);
+            fileList.appendChild(folderItem);
+        }
+    }
+    function appendToCalc(value) {
+        if (calculatorValue === '0' && value !== '.') {
+            calculatorValue = value;
+        } else {
+            calculatorValue += value;
+        }
+        document.getElementById('calc-display').textContent = calculatorValue;
+    }
+    
+    function clearCalculator() {
+        calculatorValue = '0';
+        calculatorExpression = '';
+        document.getElementById('calc-display').textContent = calculatorValue;
+    }
+    
+    function backspaceCalculator() {
+        if (calculatorValue.length === 1) {
+            calculatorValue = '0';
+        } else {
+            calculatorValue = calculatorValue.slice(0, -1);
+        }
+        document.getElementById('calc-display').textContent = calculatorValue;
+    }
+    
+    function calculateResult() {
+        try {
+            calculatorValue = eval(calculatorValue).toString();
+            document.getElementById('calc-display').textContent = calculatorValue;
+        } catch (e) {
+            document.getElementById('calc-display').textContent = 'Error';
+            calculatorValue = '0';
+        }
+    }
+    
+    function initializeSettings() {
+        document.getElementById('panel-transparency').value = panelTransparency;
+        document.getElementById('panel-transparency-value').textContent = `${panelTransparency}%`;
+        document.getElementById('dock-size').value = dockSize;
+        document.getElementById('dock-size-value').textContent = `${dockSize}px`;
+        document.getElementById('system-sounds').checked = systemSoundsEnabled;
+        document.getElementById('dock-autohide').checked = dockAutohide;
+        document.getElementById('dock-position').value = dockPosition;
+    }
+    
+    function setTheme(theme) {
+        currentTheme = theme;
+        document.body.className = theme;
+    }
+    
+    function setWallpaper(element, url) {
+        currentWallpaper = url;
+        document.getElementById('desktop').style.backgroundImage = `url('${url}')`;
+        
+        document.querySelectorAll('.wallpaper-preview').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        element.classList.add('selected');
+    }
+    
+    function updatePanelTransparency(value) {
+        panelTransparency = value;
+        document.getElementById('panel-transparency-value').textContent = `${value}%`;
+        document.querySelector('.panel').style.backgroundColor = currentTheme === 'night' 
+            ? `rgba(30, 30, 30, ${value/100})` 
+            : `rgba(240, 240, 240, ${value/100})`;
+    }
+    
+    function updateDockSize(value) {
+        dockSize = value;
+        document.getElementById('dock-size-value').textContent = `${value}px`;
+        document.querySelectorAll('.dock-icon').forEach(icon => {
+            icon.style.width = `${value}px`;
+            icon.style.height = `${value}px`;
+        });
+    }
+    
+    function toggleDockAutohide(checked) {
+        dockAutohide = checked;
+        const dock = document.querySelector('.dock');
+        if (checked) {
+            dock.style.transform = 'translateX(-50%) translateY(100%)';
+            dock.style.opacity = '0';
+            
+            document.getElementById('desktop').addEventListener('mousemove', function(e) {
+                if (e.clientY > window.innerHeight - 20) {
+                    dock.style.transform = 'translateX(-50%) translateY(0)';
+                    dock.style.opacity = '1';
+                }
+            });
+            
+            dock.addEventListener('mouseleave', function() {
+                dock.style.transform = 'translateX(-50%) translateY(100%)';
+                dock.style.opacity = '0';
+            });
+        } else {
+            dock.style.transform = 'translateX(-50%)';
+            dock.style.opacity = '1';
+        }
+    }
+    
+    function updateDockPosition(position) {
+        dockPosition = position;
+        const dock = document.querySelector('.dock');
+        
+        dock.style.left = 'auto';
+        dock.style.right = 'auto';
+        dock.style.bottom = 'auto';
+        dock.style.top = 'auto';
+        dock.style.transform = 'none';
+        
+        switch(position) {
+            case 'bottom':
+                dock.style.bottom = '20px';
+                dock.style.left = '50%';
+                dock.style.transform = 'translateX(-50%)';
+                dock.style.flexDirection = 'row';
+                break;
+            case 'left':
+                dock.style.left = '20px';
+                dock.style.top = '50%';
+                dock.style.transform = 'translateY(-50%)';
+                dock.style.flexDirection = 'column';
+                break;
+            case 'right':
+                dock.style.right = '20px';
+                dock.style.top = '50%';
+                dock.style.transform = 'translateY(-50%)';
+                dock.style.flexDirection = 'column';
+                break;
+        }
+    }
+    
+    function LGHD() {
+        fetch('https://api.github.com/users/Spacgod')
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch user');
+            return response.json();
+        })
+        .then(user => {
+            document.getElementById('github-avatar').src = user.avatar_url || 'https://avatars.githubusercontent.com/u/1?v=4';
+            document.getElementById('github-username').textContent = user.login || 'Spacgod';
+            document.getElementById('github-bio').textContent = user.bio || 'I work for the KGB :)';
+            document.getElementById('github-location').textContent = user.location ? `Location: ${user.location}` : '';
+            document.getElementById('github-blog').innerHTML = user.blog ? `Website: <a href="${user.blog}" target="_blank">${user.blog}</a>` : '';
+        })
+        .catch(error => {
+            console.error('Error fetching user:', error);
+            document.getElementById('github-avatar').src = 'https://avatars.githubusercontent.com/u/1?v=4';
+            document.getElementById('github-username').textContent = 'Spacgod';
+            document.getElementById('github-bio').textContent = 'I work for the KGB :)';
+            document.getElementById('github-location').textContent = '';
+            document.getElementById('github-blog').textContent = '';
+        });
+
+    fetch('https://api.github.com/users/Spacgod/repos?sort=updated&per_page=10')
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch repos');
+            return response.json();
+        })
+        .then(repos => {
+            displayRepositories(repos);
+        })
+        .catch(error => {
+            console.error('Error fetching repos:', error);
+            const fallbackRepos = [
+                {
+                    name: "spaceOS",
+                    description: "A web-based spaceOS desktop simulator",
+                    stargazers_count: 42,
+                    forks_count: 12,
+                    language: "JavaScript",
+                    updated_at: "2023-05-15T00:00:00Z"
+                },
+                {
+                    name: "PW",
+                    description: "My personal portfolio website",
+                    stargazers_count: 18,
+                    forks_count: 5,
+                    language: "HTML/CSS",
+                    updated_at: "2023-04-22T00:00:00Z"
+                },
+                {
+                    name: "task-manager",
+                    description: "A simple task management application",
+                    stargazers_count: 31,
+                    forks_count: 8,
+                    language: "Python",
+                    updated_at: "2023-03-10T00:00:00Z"
+                },
+                {
+                    name: "weather-app",
+                    description: "Weather forecasting application",
+                    stargazers_count: 27,
+                    forks_count: 9,
+                    language: "JavaScript",
+                    updated_at: "2023-02-28T00:00:00Z"
+                },
+                {
+                    name: "blog-platform",
+                    description: "A blogging platform with user authentication",
+                    stargazers_count: 15,
+                    forks_count: 4,
+                    language: "Ruby on Rails",
+                    updated_at: "2023-01-18T00:00:00Z"
+                }
+            ];
+            displayRepositories(fallbackRepos);
+        });
+}
+
+    function displayRepositories(repos) {
+        const reposContainer = document.getElementById('github-repos');
+        reposContainer.innerHTML = '';
+
+        repos.forEach(repo => {
+            const repoElement = document.createElement('div');
+            repoElement.className = 'github-repo';
+            repoElement.innerHTML = `
+                <div class="github-repo-header">
+                    <i class="fas fa-book"></i>
+                    <span class="github-repo-name">${repo.name}</span>
+                </div>
+                <div class="github-repo-description">${repo.description || 'No description available'}</div>
+                <div class="github-repo-stats">
+                    <div class="github-repo-stat">
+                        <i class="fas fa-star"></i>
+                        <span>${repo.stargazers_count || 0}</span>
+                </div>
+                <div class="github-repo-stat">
+                    <i class="fas fa-code-branch"></i>
+                    <span>${repo.forks_count || 0}</span>
+                </div>
+                <div class="github-repo-stat">
+                    <span>${repo.language || 'Unknown'}</span>
+                </div>
+                <div class="github-repo-stat">
+                    <span>Updated ${new Date(repo.updated_at).toLocaleDateString()}</span>
+                </div>
+            </div>
+        `;
+            reposContainer.appendChild(repoElement);
+        });
+    }
+
+    function searchRepositories() {
+        const searchTerm = document.getElementById('github-search-input').value.toLowerCase();
+        const repos = document.querySelectorAll('.github-repo');
+
+        repos.forEach(repo => {
+            const name = repo.querySelector('.github-repo-name').textContent.toLowerCase();
+            const description = repo.querySelector('.github-repo-description').textContent.toLowerCase();
+
+        if (name.includes(searchTerm) || description.includes(searchTerm)) {
+            repo.style.display = 'block';
+        } else {
+            repo.style.display = 'none';
+        }
+    });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        LGHD();
+    });
+</script>
+</body>
+</html>
